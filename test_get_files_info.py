@@ -9,10 +9,16 @@ def main():
     print(get_files_info("calculator", "pkg"))
     
     print("Result for '/bin' directory:")
-    print(get_files_info("calculator", "/bin"))
+    try:
+        print(get_files_info("calculator", "/bin"))
+    except Exception as e:
+        print(e)
     
     print("Result for '../' directory:")
-    print(get_files_info("calculator", "../"))
+    try:
+        print(get_files_info("calculator", "../"))
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
