@@ -2,27 +2,40 @@ import os
 import argparse
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 
 def main():
+    # Load environmental variables, api_key includad
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("environment variable api_key not found")
     
+    # Initialize Gemini client
     client = genai.Client(api_key=api_key)
     
+    # Parse Python arguments
     parser = argparse.ArgumentParser(description="Chatbot")
+    # First argument is user prompt
     parser.add_argument("user_prompt", type=str, help="User prompt")
+    # Second argument is --verbose option
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
-        
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=args.user_prompt)
     
-    print(f'User prompt: {args.user_prompt}')
-    print(f'Prompt tokens: {response.usage_metadata.prompt_token_count}')
-    print(f'Response tokens: {response.usage_metadata.candidates_token_count}')
-    print(f'Response:')
-    print(response.text)
+    # Add current user prompt to message history
+    messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]    
+    
+    # Call the client with user prompt and history
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=messages)
+    
+    # Result: if --verbose, print user prompt and token usage data
+    if args.verbose:
+        print(f'User prompt: {args.user_prompt}')
+        print(f'Prompt tokens: {response.usage_metadata.prompt_token_count}')
+        print(f'Response tokens: {response.usage_metadata.candidates_token_count}')
+    # Always print response
+    print(f'Response: {response.text}')
 
 
 if __name__ == "__main__":
