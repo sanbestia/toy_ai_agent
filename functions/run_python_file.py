@@ -1,6 +1,32 @@
 import os
 import subprocess
 from functions.get_abs_path_in_wd import get_abs_path_in_wd
+from google.genai import types
+
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description=
+    """Runs a .py file as a subprocess, with the file being located in a 
+    specified directory relative to the working directory. Returns a string 
+    with the subprocess stdout, stderr and exit code""",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="File path of the file to be ran, relative to the working directory",
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                description="Array of extra arguments to be passed on as parameters for the internal subprocess.run() call",
+                items=types.Schema(type=types.Type.STRING),
+            )
+        },
+        required=["file_path"]
+    ),
+)
+
 
 def run_python_file(working_directory, file_path, args=None):
     try:
