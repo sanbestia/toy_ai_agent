@@ -6,7 +6,7 @@ from config import MAX_CHARS
 
 schema_get_file_content = types.FunctionDeclaration(
     name="get_file_content",
-    description=f"Reads the contents of a file in a specified directory relative to the working directory, providing the first {MAX_CHARS} characters it contains.",
+    description=f"Reads the contents of a file in a specified directory relative to the working directory, providing the first {MAX_CHARS} characters it contains, as a string.",
     parameters=types.Schema(
         type=types.Type.OBJECT,
         properties={

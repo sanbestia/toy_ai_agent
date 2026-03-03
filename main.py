@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from prompts import system_prompt
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
     
     # Call the client with user prompt and history
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-flash-lite",
         contents=messages,
         config=types.GenerateContentConfig(tools=[available_functions],
                                            system_instruction=system_prompt),
@@ -41,10 +41,25 @@ def main():
         print(f'User prompt: {args.user_prompt}')
         print(f'Prompt tokens: {response.usage_metadata.prompt_token_count}')
         print(f'Response tokens: {response.usage_metadata.candidates_token_count}')
-    # Always print functions used OR otherwise normal response
+        
+    # List of function calls
+    function_call_results = []
+        
+    # Run functions used OR otherwise print response
     if response.function_calls:
         for function_call in response.function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
+            function_call_result = call_function(function_call, verbose=args.verbose)
+            if not function_call_result.parts:
+                raise Exception(f"Error: called function {function_call.name} but got no result")
+            response = function_call_result.parts[0].function_response
+            if not response:
+                raise Exception(f"Error: called function {function_call.name} but got empty response")
+            
+            function_call_results.append(function_call_result.parts[0])
+            
+            if args.verbose:
+                print(f"-> {response}")
+                
     else:
         print(f'Response: {response.text}')
 
