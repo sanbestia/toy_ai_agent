@@ -3,6 +3,8 @@ import argparse
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from prompts import system_prompt
+from functions.get_files_info import available_functions
 
 
 def main():
@@ -27,15 +29,24 @@ def main():
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]    
     
     # Call the client with user prompt and history
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=messages)
-    
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=messages,
+        config=types.GenerateContentConfig(tools=[available_functions],
+                                           system_instruction=system_prompt),
+    )
+        
     # Result: if --verbose, print user prompt and token usage data
     if args.verbose:
         print(f'User prompt: {args.user_prompt}')
         print(f'Prompt tokens: {response.usage_metadata.prompt_token_count}')
         print(f'Response tokens: {response.usage_metadata.candidates_token_count}')
-    # Always print response
-    print(f'Response: {response.text}')
+    # Always print functions used OR otherwise normal response
+    if response.function_calls:
+        for function_call in response.function_calls:
+            print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print(f'Response: {response.text}')
 
 
 if __name__ == "__main__":
